@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center — Raoul</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0D1B3E;--card:#1A2E5A;--border:#2A4480;--or:#F5A623;--fire:#FF6B00;--green:#2DD4A0;--red:#FF6B7A;--slate:#8892A4;--t1:#F0F4F8;--t2:#C5D0E0;--t3:#8892A4;--t4:#5A6B80;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',system-ui,sans-serif}
+html{background:var(--bg);color:#E2E8F0;font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{min-height:100vh}a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.w{max-width:1200px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--t1)}
+h1 em{font-style:normal;color:var(--or)}
+.meta{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12px;color:var(--t3)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:p 2s ease-in-out infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.g{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
+@media(min-width:720px){.g{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1080px){.g{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.full{grid-column:1/-1}
+.c{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;transition:border-color .2s}
+.c:hover{border-color:rgba(245,166,35,.25)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ch .l{display:flex;align-items:center;gap:10px}
+.b{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.st{font-size:14px;font-weight:600;color:var(--t1)}
+.cnt{font-size:11px;font-family:var(--mono);color:var(--t3);background:#122350;padding:3px 8px;border-radius:6px}
+.i{display:block;padding:9px 10px;border-radius:8px;transition:background .15s}
+.i:hover{background:rgba(13,27,62,.6)}
+.r{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fn{font-size:13px;font-weight:500;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.tm{font-size:11px;color:var(--t3);flex-shrink:0}
+.sn{font-size:12px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.su{font-size:11px;color:var(--t4);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tg{font-size:9px;font-weight:600;letter-spacing:.05em;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.ci{padding:9px 10px;border-radius:8px;margin-bottom:1px;border-left:3px solid transparent}
+.ci.cur{background:rgba(245,166,35,.07);border-left-color:var(--or)}
+.ci.hl{border-left-color:var(--green)}
+.ci.con{border-left-color:var(--red);background:rgba(255,107,122,.04)}
+.ci.dn .ct{color:var(--t4);text-decoration:line-through}
+.ctm{font-size:11px;font-family:var(--mono);color:var(--or);min-width:68px;flex-shrink:0;text-align:right}
+.ct{font-size:13px;font-weight:500;color:var(--t1)}
+.ai{padding:10px 12px;border-radius:8px;margin-bottom:3px;background:rgba(13,27,62,.5)}
+.ai.urgent{border-left:3px solid var(--red)}.ai.high{border-left:3px solid var(--or)}.ai.normal{border-left:3px solid var(--border)}
+.bu{display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:5px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:500;font-family:var(--sans);color:var(--t3);background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s}
+.btn:hover{color:#fff;border-color:rgba(245,166,35,.4)}
+.btn-p{background:var(--or);color:var(--bg);border-color:var(--or);font-weight:600}
+.btn-p:hover{background:var(--fire)}
+.sb{max-height:430px;overflow-y:auto}
+.ft{text-align:center;padding:28px 0 0;font-size:12px;color:var(--t4)}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--or);border-radius:50%;animation:spin .8s linear infinite}
+.step{font-size:13px;color:var(--t3);transition:color .3s}
+.step.active{color:var(--or)}
+.step.done{color:var(--green)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-c{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:420px;width:100%}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--t3);margin-bottom:5px;letter-spacing:.03em}
+.field input{width:100%;padding:9px 12px;font-size:13px;font-family:var(--mono);color:var(--t1);background:#122350;border:1px solid var(--border);border-radius:8px;outline:none}
+.field input:focus{border-color:var(--or)}
+.field .hint{font-size:11px;color:var(--t4);margin-top:4px}
+.err{color:var(--red);font-size:12px;margin-top:8px}
+.wa{margin-top:14px;padding:14px;background:rgba(45,212,160,.05);border:1px dashed rgba(45,212,160,.2);border-radius:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const KEY_STORE = 'dash_api_key';
+const CACHE_KEY = 'dash_cache';
+let state = { view: localStorage.getItem(KEY_STORE) ? 'loading' : 'setup', data: null, error: null, step: '' };
+
+function getKey() { return localStorage.getItem(KEY_STORE) || ''; }
+function setKey(k) { localStorage.setItem(KEY_STORE, k); }
+
+// === CLAUDE API WITH MCP ===
+async function callClaude(prompt, mcpServers = []) {
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: prompt }],
+  };
+  if (mcpServers.length) body.mcp_servers = mcpServers;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': getKey(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return await res.json();
+}
+
+// === DATA FETCH ===
+async function fetchDashboard() {
+  setState({ view: 'loading', step: 'Connecting to Gmail, Calendar, Slack…', error: null });
+
+  try {
+    setState({ step: 'Pulling emails, calendar, Slack messages…' });
+
+    const prompt = `You are generating a JSON dashboard for Raoul Edward (raoul.edward@gokwik.co), Lead - Customer Success at GoKwik (KwikEngage pod).
+
+Current time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+
+TASKS — do ALL of these using the MCP tools:
+
+1. Search Gmail for unread emails in inbox (exclude promotions category): query "is:unread in:inbox -category:promotions", max 10 results
+2. List today's Google Calendar events on primary calendar (timeMin: today 00:00, timeMax: today 23:59, timezone: Asia/Kolkata)
+3. Search Slack for recent DMs/mentions to me (query "to:me", channel_types "im,mpim", sort by timestamp desc, last 24 hours, limit 10)
+
+After fetching all data, synthesize everything into a JSON response.
+
+RESPOND WITH ONLY THIS JSON (no markdown, no backticks, no explanation):
+{
+  "generatedAt": "ISO timestamp",
+  "emails": [{"from":"name","subject":"subject","snippet":"brief snippet","time":"H:MM AM/PM","link":"https://mail.google.com/mail/u/0/#inbox/MESSAGE_ID","tag":"URGENT|JIRA|ACCOUNT|PRODUCT|ESCALATION|VENDOR|OPS|HIRING"}],
+  "calendar": [{"title":"event name","start":"H:MM AM/PM","end":"H:MM AM/PM","status":"done|current|upcoming","people":"attendee names","note":"optional context","highlight":false,"conflict":false}],
+  "slack": [{"from":"person name","msg":"message text","time":"H:MM AM/PM","type":"DM|Group","link":"slack permalink"}],
+  "briefing": {
+    "summary": "2-3 sentence executive briefing, lead with most urgent item",
+    "bullets": ["PREFIX: specific action item with names/deadlines"],
+    "actions": [{"text":"specific action","source":"email|calendar|slack","priority":"urgent|high|normal"}]
+  }
+}
+
+RULES:
+- Calendar: mark events that ended before now as "done", currently happening as "current", future as "upcoming". Flag scheduling conflicts (overlapping times). Mark interviews with highlight:true.
+- Emails: assign tags based on content. URGENT for deadlines, JIRA for Jira notifications, ESCALATION for blocked/escalated items.
+- Briefing: max 6 bullets (prefix with URGENT/CONFLICT/HIRING/ESCALATION/ACTION/FYI), max 6 actions. Flag any scheduling conflicts.
+- Slack: filter out bot messages (Jira, Google Drive, Google Calendar bots). Only show human DMs/mentions.
+- All times in IST.`;
+
+    const mcpServers = [
+      { type: 'url', url: 'https://gmail.mcp.claude.com/mcp', name: 'gmail' },
+      { type: 'url', url: 'https://gcal.mcp.claude.com/mcp', name: 'gcal' },
+      { type: 'url', url: 'https://mcp.slack.com/mcp', name: 'slack' },
+    ];
+
+    setState({ step: 'Claude is pulling your data via MCPs…' });
+    const result = await callClaude(prompt, mcpServers);
+
+    setState({ step: 'Parsing dashboard data…' });
+    
+    // Extract text content from response
+    const textBlocks = result.content?.filter(b => b.type === 'text').map(b => b.text) || [];
+    const fullText = textBlocks.join('');
+    
+    // Try to parse JSON from the response
+    let data;
+    try {
+      const clean = fullText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      // Find the first { and last } to extract JSON
+      const jsonStart = clean.indexOf('{');
+      const jsonEnd = clean.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        data = JSON.parse(clean.slice(jsonStart, jsonEnd + 1));
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch (e) {
+      // If JSON parsing fails, store raw text and use fallback
+      console.error('Parse error:', e, 'Raw:', fullText.slice(0, 500));
+      throw new Error('Could not parse dashboard data. Claude may not have returned valid JSON. Check console for details.');
+    }
+
+    data.generatedAt = data.generatedAt || new Date().toISOString();
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    setState({ view: 'dashboard', data, step: '' });
+
+  } catch (e) {
+    console.error('Fetch error:', e);
+    // Try to load cached data
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      setState({ view: 'dashboard', data: JSON.parse(cached), error: 'Refresh failed: ' + e.message + ' (showing cached data)' });
+    } else {
+      setState({ view: 'error', error: e.message });
+    }
+  }
+}
+
+// === RENDER ===
+function setState(patch) { Object.assign(state, patch); render(); }
+
+function h(tag, attrs, ...ch) {
+  const el = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'className') el.className = v;
+    else if (k === 'innerHTML') el.innerHTML = v;
+    else el.setAttribute(k, v);
+  });
+  ch.flat(9).forEach(c => { if (c != null && c !== false) el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return el;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  if (state.view === 'setup') renderSetup(app);
+  else if (state.view === 'loading') renderLoading(app);
+  else if (state.view === 'error') renderError(app);
+  else renderDashboard(app);
+}
+
+function renderSetup(app) {
+  app.appendChild(h('div', { className: 'modal' },
+    h('div', { className: 'modal-c' },
+      h('h1', { style: { fontSize: '20px', marginBottom: '4px' } }, '⚡ Command Center Setup'),
+      h('p', { style: { fontSize: '13px', color: 'var(--t3)', marginBottom: '20px', lineHeight: '1.5' } },
+        'Enter your Anthropic API key. The dashboard uses Claude + your connected MCPs (Gmail, Calendar, Slack) to pull live data every time you open it.'),
+      h('div', { className: 'field' },
+        h('label', null, 'ANTHROPIC API KEY'),
+        h('input', { id: 'f-key', type: 'password', placeholder: 'sk-ant-api03-...', value: getKey() }),
+        h('div', { className: 'hint' }, 'console.anthropic.com → API Keys. Keys stored locally in your browser.')),
+      h('div', { style: { marginTop: '16px' } },
+        h('button', { className: 'btn btn-p', onClick: () => {
+          const key = document.getElementById('f-key').value.trim();
+          if (!key) return;
+          setKey(key);
+          fetchDashboard();
+        }}, '→ Launch Dashboard')),
+    )
+  ));
+}
+
+function renderLoading(app) {
+  app.appendChild(h('div', { className: 'w' },
+    h('header', null,
+      h('h1', null, 'Loading, ', h('em', null, 'Raoul'), '…')),
+    h('div', { className: 'loading' },
+      h('div', { className: 'spinner' }),
+      h('div', { className: 'step active' }, state.step || 'Initializing…'),
+      h('p', { style: { fontSize: '11px', color: 'var(--t4)', maxWidth: '360px', textAlign: 'center', lineHeight: '1.5' } },
+        'Claude is calling your Gmail, Calendar, and Slack MCPs to pull fresh data. This takes 15-30 seconds on first load.'),
+    ),
+  ));
+}
+
+function renderError(app) {
+  app.appendChild(h('div', { className: 'w' },
+    h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center' } },
+      h('div', { style: { fontSize: '36px', marginBottom: '16px' } }, '⚠'),
+      h('h2', { style: { fontSize: '20px', color: 'var(--t1)', marginBottom: '8px' } }, 'Something went wrong'),
+      h('p', { style: { fontSize: '13px', color: 'var(--red)', maxWidth: '400px', lineHeight: '1.6', marginBottom: '20px' } }, state.error),
+      h('div', { style: { display: 'flex', gap: '10px' } },
+        h('button', { className: 'btn btn-p', onClick: fetchDashboard }, '↻ Retry'),
+        h('button', { className: 'btn', onClick: () => setState({ view: 'setup' }) }, '⚙ Settings'),
+      ),
+    ),
+  ));
+}
+
+function renderDashboard(app) {
+  const d = state.data;
+  if (!d) return;
+  const now = new Date();
+  const hr = parseInt(now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false }));
+  const greet = hr < 12 ? 'Good Morning' : hr < 17 ? 'Good Afternoon' : 'Good Evening';
+  const timeStr = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+
+  const tagCls = { URGENT: 'background:rgba(255,107,122,.15);color:#FF6B7A', JIRA: 'background:rgba(69,134,244,.15);color:#4586F4', ACCOUNT: 'background:rgba(245,166,35,.15);color:#F5A623', PRODUCT: 'background:rgba(45,212,160,.15);color:#2DD4A0', ESCALATION: 'background:rgba(255,107,0,.15);color:#FF6B00', VENDOR: 'background:rgba(136,146,164,.15);color:#8892A4', OPS: 'background:rgba(160,130,255,.15);color:#A082FF', HIRING: 'background:rgba(45,212,160,.15);color:#2DD4A0' };
+  const prioBorder = { urgent: 'var(--red)', high: 'var(--or)', normal: 'var(--border)' };
+  const srcEmoji = { email: '✉️', calendar: '📅', jira: '🎫', slack: '💬', whatsapp: '📱' };
+
+  const wrap = h('div', { className: 'w' });
+
+  // Header
+  wrap.appendChild(h('header', null,
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+      h('h1', null, greet + ', ', h('em', null, 'Raoul')),
+      h('div', { style: { display: 'flex', gap: '8px' } },
+        h('button', { className: 'btn', onClick: () => setState({ view: 'setup' }) }, '⚙'),
+        h('button', { className: 'btn', onClick: fetchDashboard }, '↻ Refresh'),
+      ),
+    ),
+    h('div', { className: 'meta' },
+      h('span', { className: 'dot' }),
+      'Last refreshed: ' + timeStr,
+      state.error ? h('span', { style: { color: 'var(--red)', marginLeft: '8px' } }, '· ' + state.error) : null,
+    ),
+  ));
+
+  const grid = h('div', { className: 'g' });
+
+  // Briefing
+  if (d.briefing) {
+    const bc = h('div', { className: 'c full' });
+    bc.appendChild(h('div', { className: 'ch' }, h('div', { className: 'l' }, h('div', { className: 'b', style: { background: 'rgba(245,166,35,.15)', color: 'var(--or)' } }, '✦'), h('span', { className: 'st' }, 'Morning Briefing'))));
+    bc.appendChild(h('p', { style: { fontSize: '13px', color: 'var(--t2)', lineHeight: '1.65', marginBottom: '14px' } }, d.briefing.summary || ''));
+    (d.briefing.bullets || []).forEach(b => {
+      const isUrgent = /^(CONFLICT|URGENT)/i.test(b);
+      bc.appendChild(h('div', { className: 'bu' }, h('span', { style: { color: 'var(--or)', marginTop: '1px', flexShrink: '0' } }, '•'), h('span', { style: { color: isUrgent ? 'var(--red)' : 'var(--t2)' } }, b)));
+    });
+    grid.appendChild(bc);
+  }
+
+  // Calendar
+  const cal = h('div', { className: 'c' });
+  cal.appendChild(h('div', { className: 'ch' }, h('div', { className: 'l' }, h('div', { className: 'b', style: { background: 'rgba(69,134,244,.15)', color: '#4586F4' } }, '📅'), h('span', { className: 'st' }, "Today's Schedule")), h('span', { className: 'cnt' }, String((d.calendar || []).length))));
+  (d.calendar || []).forEach(ev => {
+    const cls = 'ci' + (ev.status === 'done' ? ' dn' : '') + (ev.status === 'current' ? ' cur' : '') + (ev.highlight ? ' hl' : '') + (ev.conflict ? ' con' : '');
+    const item = h('div', { className: cls });
+    item.appendChild(h('div', { className: 'r' }, h('span', { className: 'ct' }, ev.title || ''), h('span', { className: 'ctm' }, ev.start || '')));
+    if (ev.people) item.appendChild(h('div', { style: { fontSize: '11px', color: 'var(--t4)', marginTop: '2px' } }, ev.people));
+    if (ev.note) item.appendChild(h('div', { style: { fontSize: '11px', color: '#6B7A8E', marginTop: '1px', fontStyle: 'italic' } }, ev.note));
+    if (ev.conflict) item.appendChild(h('div', { style: { fontSize: '10px', color: 'var(--red)', marginTop: '2px', fontWeight: '600' } }, '⚠ SCHEDULING CONFLICT'));
+    cal.appendChild(item);
+  });
+  grid.appendChild(cal);
+
+  // Emails
+  const eml = h('div', { className: 'c' });
+  eml.appendChild(h('div', { className: 'ch' }, h('div', { className: 'l' }, h('div', { className: 'b', style: { background: 'rgba(255,107,122,.15)', color: '#FF6B7A' } }, '✉'), h('span', { className: 'st' }, 'Unreplied Emails')), h('span', { className: 'cnt' }, String((d.emails || []).length))));
+  const emlBody = h('div', { className: 'sb' });
+  (d.emails || []).forEach(em => {
+    const tagStyle = tagCls[em.tag] || tagCls.OPS;
+    emlBody.appendChild(h('a', { className: 'i', href: em.link || '#', target: '_blank', rel: 'noopener noreferrer' },
+      h('div', { className: 'r' },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', minWidth: '0' } },
+          h('span', { className: 'fn' }, em.from || ''),
+          h('span', { className: 'tg', style: { cssText: tagStyle } }, em.tag || '')),
+        h('span', { className: 'tm' }, em.time || '')),
+      h('div', { className: 'sn' }, em.subject || ''),
+      h('div', { className: 'su' }, em.snippet || '')));
+  });
+  eml.appendChild(emlBody);
+  grid.appendChild(eml);
+
+  // Slack
+  const slk = h('div', { className: 'c' });
+  slk.appendChild(h('div', { className: 'ch' }, h('div', { className: 'l' }, h('div', { className: 'b', style: { background: 'rgba(160,130,255,.15)', color: '#A082FF' } }, '💬'), h('span', { className: 'st' }, 'Slack Attention')), h('span', { className: 'cnt' }, String((d.slack || []).length))));
+  (d.slack || []).forEach(msg => {
+    slk.appendChild(h('a', { className: 'i', href: msg.link || '#', target: '_blank', rel: 'noopener noreferrer' },
+      h('div', { className: 'r' },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+          h('span', { className: 'fn' }, msg.from || ''),
+          h('span', { className: 'tg', style: { cssText: 'background:#122350;color:var(--t3)' } }, msg.type || 'DM')),
+        h('span', { className: 'tm' }, msg.time || '')),
+      h('div', { className: 'sn' }, msg.msg || '')));
+  });
+  slk.appendChild(h('div', { className: 'wa' },
+    h('h4', { style: { fontSize: '13px', fontWeight: '600', color: 'var(--green)', marginBottom: '4px' } }, '📱 WhatsApp Mentions'),
+    h('p', { style: { fontSize: '11px', color: 'var(--t4)', lineHeight: '1.5' } }, 'Coming soon — Whapi.Cloud integration')));
+  grid.appendChild(slk);
+
+  // Actions
+  if (d.briefing?.actions?.length) {
+    const act = h('div', { className: 'c full' });
+    act.appendChild(h('div', { className: 'ch' }, h('div', { className: 'l' }, h('div', { className: 'b', style: { background: 'rgba(255,107,0,.15)', color: '#FF6B00' } }, '⚡'), h('span', { className: 'st' }, 'Action Items')), h('span', { className: 'cnt' }, d.briefing.actions.length + ' pending')));
+    d.briefing.actions.forEach(a => {
+      const prio = a.priority || 'normal';
+      const item = h('div', { className: 'ai ' + prio });
+      item.appendChild(h('div', { style: { fontSize: '13px', color: 'var(--t2)', lineHeight: '1.5' } }, a.text || ''));
+      item.appendChild(h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontSize: '11px', color: 'var(--t3)' } },
+        (srcEmoji[a.source] || '📌') + ' ' + (a.source || ''),
+        h('span', { style: { width: '5px', height: '5px', borderRadius: '50%', background: prioBorder[prio] || 'var(--t3)' } }),
+        h('span', { style: { color: prioBorder[prio] || 'var(--t3)', fontWeight: '500' } }, prio)));
+      act.appendChild(item);
+    });
+    grid.appendChild(act);
+  }
+
+  wrap.appendChild(grid);
+  wrap.appendChild(h('div', { className: 'ft' },
+    'Powered by Claude + MCPs · Auto-refreshes on every open · ' +
+    new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })));
+  app.appendChild(wrap);
+}
+
+// === BOOT ===
+render();
+if (state.view === 'loading') fetchDashboard();
+</script>
+</body>
+</html>
