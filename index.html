@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center — Raoul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0D1B3E;--card:#1A2E5A;--border:#2A4480;--orange:#F5A623;--fire:#FF6B00;--green:#2DD4A0;--red:#FF6B7A;--slate:#8892A4;--text:#E2E8F0;--text2:#C5D0E0;--text3:#8892A4;--text4:#5A6B80;--mono:'JetBrains Mono',monospace;--sans:'DM Sans',system-ui,sans-serif}
+html{background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.wrap{max-width:1200px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:28px;font-weight:700;letter-spacing:-.02em;color:#F0F4F8}
+h1 span{color:var(--orange)}
+.meta{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12px;color:var(--text3)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .35s ease forwards;opacity:0}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
+@media(min-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1080px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.full{grid-column:1/-1}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;transition:border-color .2s}
+.card:hover{border-color:rgba(245,166,35,.25)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-head .left{display:flex;align-items:center;gap:10px}
+.badge{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.section-title{font-size:14px;font-weight:600;color:#F0F4F8}
+.count{font-size:11px;font-family:var(--mono);color:var(--text3);background:#122350;padding:3px 8px;border-radius:6px}
+
+/* Items */
+.item{display:block;padding:9px 10px;border-radius:8px;transition:background .15s;cursor:pointer}
+.item:hover{background:rgba(13,27,62,.6)}
+.item-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.item-from{font-size:13px;font-weight:500;color:#F0F4F8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.item-time{font-size:11px;color:var(--text3);flex-shrink:0}
+.item-snippet{font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-sub{font-size:11px;color:var(--text4);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Tags */
+.tag{font-size:9px;font-weight:600;letter-spacing:.05em;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.tag-urgent{background:rgba(255,107,122,.15);color:#FF6B7A}
+.tag-jira{background:rgba(69,134,244,.15);color:#4586F4}
+.tag-account{background:rgba(245,166,35,.15);color:#F5A623}
+.tag-product{background:rgba(45,212,160,.15);color:#2DD4A0}
+.tag-escalation{background:rgba(255,107,0,.15);color:#FF6B00}
+.tag-vendor{background:rgba(136,146,164,.15);color:#8892A4}
+.tag-ops{background:rgba(160,130,255,.15);color:#A082FF}
+.tag-hiring{background:rgba(45,212,160,.15);color:#2DD4A0}
+.tag-dm{background:#122350;color:var(--text3)}
+
+/* Calendar */
+.cal-item{padding:9px 10px;border-radius:8px;margin-bottom:1px;border-left:3px solid transparent}
+.cal-item.current{background:rgba(245,166,35,.07);border-left-color:var(--orange)}
+.cal-item.highlight{border-left-color:var(--green)}
+.cal-item.done .cal-title{color:var(--text4);text-decoration:line-through}
+.cal-time{font-size:11px;font-family:var(--mono);color:var(--orange);min-width:68px;flex-shrink:0}
+.cal-title{font-size:13px;font-weight:500;color:#F0F4F8}
+.cal-attendees{font-size:11px;color:var(--text4);margin-top:2px}
+
+/* Actions */
+.action-item{padding:10px 12px;border-radius:8px;margin-bottom:3px;background:rgba(13,27,62,.5)}
+.action-item.urgent{border-left:3px solid var(--red)}
+.action-item.high{border-left:3px solid var(--orange)}
+.action-item.normal{border-left:3px solid var(--border)}
+.action-text{font-size:13px;color:var(--text2);line-height:1.5}
+.action-meta{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;color:var(--text3)}
+.priority-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* Briefing bullets */
+.bullet{display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-bottom:5px}
+.bullet-dot{color:var(--orange);margin-top:1px;flex-shrink:0}
+.bullet-text{color:var(--text2)}
+
+/* Button */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:12px;font-weight:500;font-family:var(--sans);color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s}
+.btn:hover{color:#fff;border-color:rgba(245,166,35,.4)}
+
+/* WhatsApp placeholder */
+.wa-placeholder{margin-top:14px;padding:14px;background:rgba(45,212,160,.05);border:1px dashed rgba(45,212,160,.2);border-radius:8px}
+.wa-placeholder h4{font-size:13px;font-weight:600;color:var(--green);margin-bottom:4px}
+.wa-placeholder p{font-size:11px;color:var(--text4);line-height:1.5}
+
+/* Settings modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:20px;font-weight:700;color:#F0F4F8;margin-bottom:4px}
+.modal p.sub{font-size:13px;color:var(--text3);margin-bottom:20px;line-height:1.5}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text3);margin-bottom:5px;letter-spacing:.03em}
+.field input{width:100%;padding:9px 12px;font-size:13px;font-family:var(--mono);color:var(--text);background:#122350;border:1px solid var(--border);border-radius:8px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--orange)}
+.field .hint{font-size:11px;color:var(--text4);margin-top:4px}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.btn-primary{background:var(--orange);color:var(--bg);border-color:var(--orange);font-weight:600}
+.btn-primary:hover{background:var(--fire);border-color:var(--fire)}
+
+/* Scrollable card body */
+.card-body{max-height:430px;overflow-y:auto}
+
+/* Footer */
+.footer{text-align:center;padding:28px 0 0;font-size:12px;color:var(--text4)}
+
+/* Loading */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:12px}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite}
+.loading-text{font-size:13px;color:var(--text3)}
+
+/* Empty dashboard */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center}
+.empty h2{font-size:22px;font-weight:700;color:#F0F4F8;margin:16px 0 8px}
+.empty p{font-size:13px;color:var(--text3);max-width:380px;line-height:1.6;margin-bottom:24px}
+.empty .icon{width:56px;height:56px;border-radius:16px;background:rgba(245,166,35,.12);display:flex;align-items:center;justify-content:center;font-size:24px}
+
+/* Error */
+.error-text{color:var(--red);font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// =============================
+// CONFIG & STATE
+// =============================
+const CONFIG_KEY = 'dashboard_config';
+const CACHE_KEY = 'dashboard_cache';
+
+function getConfig() {
+  try { return JSON.parse(localStorage.getItem(CONFIG_KEY)) || null; } catch { return null; }
+}
+function setConfig(cfg) { localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); }
+function getCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || null; } catch { return null; }
+}
+function setCache(data) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
+
+let state = {
+  view: getConfig() ? 'dashboard' : 'setup',
+  config: getConfig(),
+  data: getCache(),
+  loading: false,
+  error: null,
+  briefing: null,
+  briefingLoading: false,
+};
+
+function setState(patch) {
+  Object.assign(state, patch);
+  render();
+}
+
+// =============================
+// API HELPERS
+// =============================
+async function fetchGmail(config) {
+  try {
+    // Refresh access token
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: config.googleClientId,
+        client_secret: config.googleClientSecret,
+        refresh_token: config.googleRefreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+    if (!accessToken) return [];
+
+    const res = await fetch(
+      `https://www.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent('is:unread in:inbox -category:promotions')}&maxResults=10`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const data = await res.json();
+    if (!data.messages) return [];
+
+    const emails = [];
+    for (const msg of data.messages.slice(0, 10)) {
+      const detail = await fetch(
+        `https://www.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const d = await detail.json();
+      const headers = d.payload?.headers || [];
+      const from = headers.find(h => h.name === 'From')?.value || '';
+      const subject = headers.find(h => h.name === 'Subject')?.value || '';
+      const date = headers.find(h => h.name === 'Date')?.value || '';
+      emails.push({
+        id: msg.id,
+        from: from.replace(/<[^>]+>/g, '').replace(/"/g, '').trim(),
+        subject,
+        snippet: d.snippet || '',
+        time: new Date(date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }),
+        link: `https://mail.google.com/mail/u/0/#inbox/${msg.id}`,
+      });
+    }
+    return emails;
+  } catch (e) { console.error('Gmail error:', e); return []; }
+}
+
+async function fetchCalendar(config) {
+  try {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: config.googleClientId,
+        client_secret: config.googleClientSecret,
+        refresh_token: config.googleRefreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+    const { access_token } = await tokenRes.json();
+    if (!access_token) return [];
+
+    const now = new Date();
+    const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999);
+
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${startOfDay.toISOString()}&timeMax=${endOfDay.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=20&timeZone=Asia/Kolkata`,
+      { headers: { Authorization: `Bearer ${access_token}` } }
+    );
+    const data = await res.json();
+    const nowMs = Date.now();
+
+    return (data.items || []).map(ev => {
+      const start = ev.start?.dateTime || ev.start?.date || '';
+      const end = ev.end?.dateTime || ev.end?.date || '';
+      const isAllDay = !ev.start?.dateTime;
+      const startMs = new Date(start).getTime();
+      const endMs = new Date(end).getTime();
+      const status = endMs < nowMs ? 'done' : (startMs <= nowMs && endMs > nowMs) ? 'current' : 'upcoming';
+      const attendees = (ev.attendees || []).filter(a => !a.self).map(a => a.displayName || a.email?.split('@')[0] || '').slice(0, 5);
+
+      return {
+        id: ev.id,
+        title: ev.summary || '(No Title)',
+        start: isAllDay ? 'All Day' : new Date(start).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }),
+        end: isAllDay ? '' : new Date(end).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }),
+        status,
+        attendees: attendees.join(', ') + (ev.attendees?.length > 5 ? ` +${ev.attendees.length - 5}` : ''),
+        highlight: (ev.summary || '').toLowerCase().includes('interview'),
+        meetLink: ev.hangoutLink || null,
+        desc: ev.description?.replace(/<[^>]+>/g, '').slice(0, 100) || '',
+      };
+    });
+  } catch (e) { console.error('Calendar error:', e); return []; }
+}
+
+async function fetchJira(config) {
+  if (!config.jiraBaseUrl || !config.jiraEmail || !config.jiraToken) return [];
+  try {
+    const auth = btoa(`${config.jiraEmail}:${config.jiraToken}`);
+    const project = config.jiraProject || 'TO';
+    const jql = encodeURIComponent(
+      `project = ${project} AND status in ("New","Open","In Progress","To Do") AND (assignee = currentUser() OR reporter = currentUser()) ORDER BY priority DESC, created DESC`
+    );
+    const res = await fetch(
+      `${config.jiraBaseUrl}/rest/api/3/search?jql=${jql}&maxResults=10&fields=summary,status,priority,assignee,created`,
+      { headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' } }
+    );
+    const data = await res.json();
+    return (data.issues || []).map(issue => ({
+      key: issue.key,
+      summary: issue.fields.summary,
+      status: issue.fields.status?.name || 'Unknown',
+      priority: issue.fields.priority?.name || 'Medium',
+      assignee: issue.fields.assignee?.displayName || 'Unassigned',
+      link: `${config.jiraBaseUrl}/browse/${issue.key}`,
+    }));
+  } catch (e) { console.error('Jira error:', e); return []; }
+}
+
+async function generateBriefing(config, emails, calendar, jira) {
+  if (!config.anthropicKey) return null;
+  const emailSummary = emails.map(e => `- ${e.from}: ${e.subject}`).join('\n');
+  const calSummary = calendar.map(c => `- ${c.start}: ${c.title} [${c.status}]`).join('\n');
+  const jiraSummary = jira.map(j => `- ${j.key} [${j.priority}]: ${j.summary}`).join('\n');
+
+  const prompt = `You are Raoul's executive assistant AI. Current time: ${new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}
+
+EMAILS (${emails.length}):
+${emailSummary || 'None'}
+
+CALENDAR (${calendar.length}):
+${calSummary || 'None'}
+
+JIRA (${jira.length}):
+${jiraSummary || 'None'}
+
+Respond ONLY in JSON (no markdown, no backticks):
+{"summary":"2-3 sentence briefing, lead with most urgent","bullets":["PREFIX: specific item"],"actions":[{"text":"action","source":"email|calendar|jira","priority":"urgent|high|normal"}]}
+Rules: max 6 bullets, max 6 actions. Prefix bullets with URGENT/ACTION/HIRING/FYI/CONFLICT. Flag scheduling conflicts.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] }),
+    });
+    const data = await res.json();
+    const text = data.content?.map(c => c.text || '').join('') || '';
+    return JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim());
+  } catch (e) {
+    console.error('Briefing error:', e);
+    return { summary: `You have ${emails.length} emails, ${calendar.length} events, and ${jira.length} Jira tickets.`, bullets: [], actions: [] };
+  }
+}
+
+async function refreshDashboard() {
+  const config = getConfig();
+  if (!config) return;
+  setState({ loading: true, error: null });
+
+  try {
+    const [emails, calendar, jira] = await Promise.all([
+      fetchGmail(config),
+      fetchCalendar(config),
+      fetchJira(config),
+    ]);
+
+    const briefing = await generateBriefing(config, emails, calendar, jira);
+
+    const data = {
+      generatedAt: new Date().toISOString(),
+      emails,
+      calendar,
+      jira,
+      briefing,
+    };
+    setCache(data);
+    setState({ data, briefing, loading: false });
+  } catch (e) {
+    setState({ loading: false, error: e.message });
+  }
+}
+
+// =============================
+// RENDER
+// =============================
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'className') el.className = v;
+    else if (k === 'innerHTML') el.innerHTML = v;
+    else el.setAttribute(k, v);
+  });
+  children.flat(Infinity).forEach(c => {
+    if (c == null || c === false) return;
+    el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  });
+  return el;
+}
+
+function renderSetup() {
+  const cfg = getConfig() || {};
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  app.appendChild(
+    h('div', { className: 'modal-overlay' },
+      h('div', { className: 'modal' },
+        h('h2', null, '⚡ Dashboard Setup'),
+        h('p', { className: 'sub' }, 'Enter your API keys. They\'re stored locally in your browser — never sent anywhere except directly to each service\'s API.'),
+        h('div', { className: 'field' },
+          h('label', null, 'ANTHROPIC API KEY'),
+          h('input', { id: 'f-anthropic', type: 'password', placeholder: 'sk-ant-...', value: cfg.anthropicKey || '' }),
+          h('div', { className: 'hint' }, 'console.anthropic.com → API Keys')),
+        h('div', { className: 'field' },
+          h('label', null, 'GOOGLE CLIENT ID'),
+          h('input', { id: 'f-gcid', placeholder: '...apps.googleusercontent.com', value: cfg.googleClientId || '' }),
+          h('div', { className: 'hint' }, 'Google Cloud Console → OAuth 2.0 Client')),
+        h('div', { className: 'field' },
+          h('label', null, 'GOOGLE CLIENT SECRET'),
+          h('input', { id: 'f-gcs', type: 'password', value: cfg.googleClientSecret || '' })),
+        h('div', { className: 'field' },
+          h('label', null, 'GOOGLE REFRESH TOKEN'),
+          h('input', { id: 'f-grt', type: 'password', value: cfg.googleRefreshToken || '' }),
+          h('div', { className: 'hint' }, 'Obtained via OAuth flow (Gmail + Calendar access)')),
+        h('div', { className: 'field' },
+          h('label', null, 'JIRA BASE URL'),
+          h('input', { id: 'f-jurl', placeholder: 'https://gokwik.atlassian.net', value: cfg.jiraBaseUrl || 'https://gokwik.atlassian.net' })),
+        h('div', { className: 'field' },
+          h('label', null, 'JIRA EMAIL'),
+          h('input', { id: 'f-jemail', placeholder: 'raoul.edward@gokwik.co', value: cfg.jiraEmail || '' })),
+        h('div', { className: 'field' },
+          h('label', null, 'JIRA API TOKEN'),
+          h('input', { id: 'f-jtoken', type: 'password', value: cfg.jiraToken || '' }),
+          h('div', { className: 'hint' }, 'id.atlassian.com → Security → API tokens')),
+        h('div', { className: 'field' },
+          h('label', null, 'JIRA PROJECT KEY'),
+          h('input', { id: 'f-jproj', placeholder: 'TO', value: cfg.jiraProject || 'TO' })),
+        h('div', { className: 'modal-actions' },
+          h('button', { className: 'btn btn-primary', onClick: () => {
+            const newCfg = {
+              anthropicKey: document.getElementById('f-anthropic').value.trim(),
+              googleClientId: document.getElementById('f-gcid').value.trim(),
+              googleClientSecret: document.getElementById('f-gcs').value.trim(),
+              googleRefreshToken: document.getElementById('f-grt').value.trim(),
+              jiraBaseUrl: document.getElementById('f-jurl').value.trim(),
+              jiraEmail: document.getElementById('f-jemail').value.trim(),
+              jiraToken: document.getElementById('f-jtoken').value.trim(),
+              jiraProject: document.getElementById('f-jproj').value.trim() || 'TO',
+            };
+            setConfig(newCfg);
+            setState({ config: newCfg, view: 'dashboard' });
+            refreshDashboard();
+          }}, 'Save & Launch'),
+          cfg.anthropicKey ? h('button', { className: 'btn', onClick: () => setState({ view: 'dashboard' }) }, 'Cancel') : null,
+        ),
+      )
+    )
+  );
+}
+
+function renderDashboard() {
+  const { data, loading, error } = state;
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const now = new Date();
+  const timeStr = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+  const hour = parseInt(now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false }));
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+  const wrap = h('div', { className: 'wrap' });
+
+  // Header
+  const header = h('header', null,
+    h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+      h('h1', null, `${greeting}, `, h('span', null, 'Raoul')),
+      h('div', { style: { display: 'flex', gap: '8px' } },
+        h('button', { className: 'btn', onClick: () => setState({ view: 'setup' }) }, '⚙'),
+        h('button', { className: 'btn', onClick: refreshDashboard, disabled: loading },
+          loading ? h('span', { style: { display: 'inline-block', animation: 'spin 1s linear infinite' } }, '↻') : '↻',
+          loading ? ' Refreshing…' : ' Refresh'),
+      ),
+    ),
+    h('div', { className: 'meta' },
+      h('span', { className: 'dot' }),
+      data ? `Last refreshed: ${new Date(data.generatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}` : 'Not yet refreshed',
+      error ? h('span', { className: 'error-text' }, ` · ${error}`) : null,
+    ),
+  );
+  wrap.appendChild(header);
+
+  if (!data && !loading) {
+    wrap.appendChild(h('div', { className: 'empty' },
+      h('div', { className: 'icon' }, '✦'),
+      h('h2', null, 'Ready to launch'),
+      h('p', null, 'Hit Refresh to pull data from Gmail, Calendar, and Jira — then let Claude synthesize your morning briefing.'),
+      h('button', { className: 'btn btn-primary', onClick: refreshDashboard }, '↻ Generate Dashboard'),
+    ));
+    app.appendChild(wrap);
+    return;
+  }
+
+  if (loading && !data) {
+    wrap.appendChild(h('div', { className: 'loading' },
+      h('div', { className: 'spinner' }),
+      h('div', { className: 'loading-text' }, 'Pulling data from Gmail, Calendar, Jira…'),
+    ));
+    app.appendChild(wrap);
+    return;
+  }
+
+  const grid = h('div', { className: 'grid' });
+
+  // === BRIEFING (full width) ===
+  if (data.briefing) {
+    const b = data.briefing;
+    const briefCard = h('div', { className: 'card full anim', style: { animationDelay: '0.05s' } },
+      h('div', { className: 'card-head' },
+        h('div', { className: 'left' }, h('div', { className: 'badge', style: { background: 'rgba(245,166,35,.15)', color: 'var(--orange)' } }, '✦'), h('span', { className: 'section-title' }, 'Morning Briefing')),
+      ),
+      h('p', { style: { fontSize: '13px', color: 'var(--text2)', lineHeight: '1.65', marginBottom: '12px' } }, b.summary),
+    );
+    (b.bullets || []).forEach(bullet => {
+      briefCard.appendChild(h('div', { className: 'bullet' }, h('span', { className: 'bullet-dot' }, '•'), h('span', { className: 'bullet-text' }, bullet)));
+    });
+    grid.appendChild(briefCard);
+  }
+
+  // === CALENDAR ===
+  const calCard = h('div', { className: 'card anim', style: { animationDelay: '0.1s' } },
+    h('div', { className: 'card-head' },
+      h('div', { className: 'left' }, h('div', { className: 'badge', style: { background: 'rgba(69,134,244,.15)', color: '#4586F4' } }, '📅'), h('span', { className: 'section-title' }, "Today's Schedule")),
+      h('span', { className: 'count' }, String(data.calendar?.length || 0)),
+    ),
+  );
+  (data.calendar || []).forEach(ev => {
+    const cls = `cal-item ${ev.status} ${ev.highlight ? 'highlight' : ''}`;
+    const item = h('div', { className: cls },
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+        h('span', { className: 'cal-title' }, ev.title),
+        h('span', { className: 'cal-time' }, ev.start),
+      ),
+    );
+    if (ev.attendees) item.appendChild(h('div', { className: 'cal-attendees' }, ev.attendees));
+    calCard.appendChild(item);
+  });
+  grid.appendChild(calCard);
+
+  // === EMAILS ===
+  const emailCard = h('div', { className: 'card anim', style: { animationDelay: '0.15s' } },
+    h('div', { className: 'card-head' },
+      h('div', { className: 'left' }, h('div', { className: 'badge', style: { background: 'rgba(255,107,122,.15)', color: '#FF6B7A' } }, '✉'), h('span', { className: 'section-title' }, 'Unreplied Emails')),
+      h('span', { className: 'count' }, String(data.emails?.length || 0)),
+    ),
+  );
+  const emailBody = h('div', { className: 'card-body' });
+  (data.emails || []).forEach(em => {
+    emailBody.appendChild(h('a', { className: 'item', href: em.link, target: '_blank', rel: 'noopener noreferrer' },
+      h('div', { className: 'item-row' },
+        h('span', { className: 'item-from' }, em.from),
+        h('span', { className: 'item-time' }, em.time),
+      ),
+      h('div', { className: 'item-snippet' }, em.subject),
+      h('div', { className: 'item-sub' }, em.snippet),
+    ));
+  });
+  emailCard.appendChild(emailBody);
+  grid.appendChild(emailCard);
+
+  // === JIRA ===
+  const prioColor = { Highest: '#FF6B7A', High: '#F5A623', Medium: '#EAB308', Low: '#2DD4A0', Lowest: '#8892A4' };
+  const jiraCard = h('div', { className: 'card anim', style: { animationDelay: '0.2s' } },
+    h('div', { className: 'card-head' },
+      h('div', { className: 'left' }, h('div', { className: 'badge', style: { background: 'rgba(69,134,244,.15)', color: '#4586F4' } }, '🎫'), h('span', { className: 'section-title' }, 'Jira Tickets')),
+      h('span', { className: 'count' }, String(data.jira?.length || 0)),
+    ),
+  );
+  (data.jira || []).forEach(t => {
+    jiraCard.appendChild(h('a', { className: 'item', href: t.link, target: '_blank', rel: 'noopener noreferrer' },
+      h('div', { className: 'item-row' },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+          h('span', { style: { fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--orange)' } }, t.key),
+          h('span', { className: 'tag tag-jira' }, t.status),
+        ),
+        h('span', { style: { fontSize: '12px', fontWeight: '500', color: prioColor[t.priority] || 'var(--text3)' } }, t.priority),
+      ),
+      h('div', { className: 'item-snippet' }, t.summary),
+    ));
+  });
+  grid.appendChild(jiraCard);
+
+  // === ACTIONS ===
+  if (data.briefing?.actions?.length) {
+    const actCard = h('div', { className: 'card full anim', style: { animationDelay: '0.25s' } },
+      h('div', { className: 'card-head' },
+        h('div', { className: 'left' }, h('div', { className: 'badge', style: { background: 'rgba(255,107,0,.15)', color: '#FF6B00' } }, '⚡'), h('span', { className: 'section-title' }, 'Action Items')),
+        h('span', { className: 'count' }, `${data.briefing.actions.length} pending`),
+      ),
+    );
+    data.briefing.actions.forEach(a => {
+      const prio = a.priority || 'normal';
+      const dotColor = { urgent: 'var(--red)', high: 'var(--orange)', normal: 'var(--text3)' };
+      const emoji = { email: '✉️', calendar: '📅', jira: '🎫', slack: '💬', whatsapp: '📱' };
+      actCard.appendChild(h('div', { className: `action-item ${prio}` },
+        h('div', { className: 'action-text' }, a.text),
+        h('div', { className: 'action-meta' },
+          `${emoji[a.source] || '📌'} ${a.source}`,
+          h('span', { className: 'priority-dot', style: { background: dotColor[prio] || 'var(--text3)' } }),
+          h('span', { style: { color: dotColor[prio], fontWeight: '500' } }, prio),
+        ),
+      ));
+    });
+    grid.appendChild(actCard);
+  }
+
+  wrap.appendChild(grid);
+  wrap.appendChild(h('div', { className: 'footer' }, `Powered by Claude · GitHub Pages · ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`));
+  app.appendChild(wrap);
+}
+
+function render() {
+  if (state.view === 'setup') renderSetup();
+  else renderDashboard();
+}
+
+// Boot
+render();
+if (state.config && !state.data) refreshDashboard();
+</script>
+</body>
+</html>
